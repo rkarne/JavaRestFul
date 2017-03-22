@@ -5,6 +5,10 @@
  */
 package rest;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.faces.bean.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -59,6 +63,18 @@ public class MessageService {
     @Produces("application/json")
     public JsonObject getJsonById(@PathParam("id") int id){
      return messageController.getByIdJson(id);
+        
+    }
+    
+    
+    
+     @GET()
+    @Path("{startdate}/{enddate}")
+    @Produces("application/json")
+    public JsonArray getJsonByDate(@PathParam("startdate") String startDate, @PathParam("enddate") String endDate ) throws ParseException{
+        DateFormat df = new SimpleDateFormat("yyyy-mm-dd");
+        
+       return messageController.getByDateJson(df.parse(startDate), df.parse(endDate));
         
     }
     /**

@@ -42,12 +42,9 @@ public class MessageController {
     private void getValues(){
         try {
             messages = new ArrayList<>();
-            currentmessage = new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20"));
-            messages.add(currentmessage);
-            currentmessage = new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-20"));
-            messages.add(currentmessage);
-            currentmessage = new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-20"));
-            messages.add(currentmessage);
+            messages.add(new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20")));
+            messages.add(new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-21")));
+            messages.add(new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-22")));
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
             
@@ -91,7 +88,7 @@ public class MessageController {
                      .add("id", m.getId())
                      .add("title", m.getTitle())
                      .add("contents", m.getContents())
-                     .add("author", m.getContents())
+                     .add("author", m.getAuthor())
                      .add("senttime", m.getSenttime().toString())
                      .build(); 
              return json;

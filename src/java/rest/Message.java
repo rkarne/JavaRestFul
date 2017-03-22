@@ -30,7 +30,7 @@ public class Message {
     {
     
     }
-  DateFormat d = new SimpleDateFormat("mm/dd/yyyy");
+  DateFormat d = new SimpleDateFormat("yyyy-mm-dd");
   
    public  Message(int id, String title, String contents, String author, Date senttime){
         this.id = id;
