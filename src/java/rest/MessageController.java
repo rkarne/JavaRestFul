@@ -20,6 +20,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 /**
  *
@@ -42,21 +43,21 @@ public class MessageController {
         try {
             messages = new ArrayList<>();
             currentmessage = new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20"));
+            messages.add(currentmessage);
             currentmessage = new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-20"));
+            messages.add(currentmessage);
             currentmessage = new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-20"));
             messages.add(currentmessage);
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-            messages = new ArrayList<>();
+            
         }
     }
     public JsonArray getAllJson(){
          JsonArrayBuilder json = Json.createArrayBuilder();
-            json.add(currentmessage.getId());
-            json.add(currentmessage.getTitle());
-            json.add(currentmessage.getContents());
-            json.add(currentmessage.getAuthor());
-            json.add(currentmessage.getSenttime().toString());  
+         for(Message m : messages){
+             json.add(getByIdJson(m.getId()));
+         }  
         return json.build();
     }
 
@@ -69,6 +70,7 @@ public class MessageController {
     }
     
     public List<Message> getMessageList() {
+        
         return messages;
     }
     

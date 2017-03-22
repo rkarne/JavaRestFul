@@ -19,6 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PUT;
+import javax.ws.rs.core.Response;
 
 /**
  * REST Web Service
@@ -33,7 +34,7 @@ public class MessageService {
     @Context
     private UriInfo context;
    
-    private MessageController messageController;
+    private MessageController messageController = new MessageController();
 
     /**
      * Creates a new instance of GenericResource
@@ -47,14 +48,13 @@ public class MessageService {
      */
     @GET
     @Produces("application/json")
-    public JsonArray getJson() {
+    public Response getJson() {
         //TODO return proper representation object
-        JsonArrayBuilder json = Json.createArrayBuilder();
-        
-        for (Message todo : messageController.getMessageList()) {
-            json.add(messageController.toString());
+      JsonArrayBuilder json = Json.createArrayBuilder();
+        for (Message m : messageController.getMessageList()) {
+            json.add(m.toJSON());
         }
-        return json.build();
+        return Response.ok(json.build().toString()).build();
     }
 
     /**
