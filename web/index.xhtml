@@ -7,17 +7,7 @@
     </h:head>
     <h:body>
         <h:form>
-            <h:dataTable value="#{messagecontroller.messageList}" var="messageList">
-                <!--<h:column>
-                    <h:commandLink action="{postlist.view(postdetails)}">{messagelist.title}</h:commandLink>
-                </h:column> -->
-                <h:column>
-                    #{messageList}
-                </h:column>
-                 <h:column>
-                    #{postdetails.createdTime.toLocaleString()}
-                </h:column>
-            </h:dataTable>
+          
             
 </h:form>
     </h:body>

@@ -5,6 +5,7 @@
  */
 package rest;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,16 +16,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.bean.ApplicationScoped;
 import javax.inject.Named;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 
 /**
  *
  * @author rkarne
  */
-@ApplicationScoped
 @Named
+@ApplicationScoped
+
 public class MessageController {
-    private List<Message> messageList;
+    private List<Message> messages;
     Message currentmessage;
+    DateFormat df = new SimpleDateFormat("yyyy-mm-dd");
 
     public MessageController(){
         currentmessage = new Message(1, "", "", "", null);
@@ -33,37 +40,117 @@ public class MessageController {
     
     private void getValues(){
         try {
-            messageList = new ArrayList<>();
-            DateFormat df = new SimpleDateFormat("yyy-MM-dd");
-            Date senttime = df.parse("2017-03-22");
-            currentmessage = new Message(1,"TestTitle", "This is sample testing", "Test", senttime);
-            add(currentmessage);
+            messages = new ArrayList<>();
+            currentmessage = new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20"));
+            currentmessage = new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-20"));
+            currentmessage = new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-20"));
+            messages.add(currentmessage);
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            messages = new ArrayList<>();
         }
     }
-    public void add(Message s) {
-        messageList.add(s);
+    public JsonArray getAllJson(){
+         JsonArrayBuilder json = Json.createArrayBuilder();
+            json.add(currentmessage.getId());
+            json.add(currentmessage.getTitle());
+            json.add(currentmessage.getContents());
+            json.add(currentmessage.getAuthor());
+            json.add(currentmessage.getSenttime().toString());  
+        return json.build();
+    }
+
+    public void setCurrentmessage(Message currentmessage) {
+        this.currentmessage = currentmessage;
+    }
+
+    public Message getCurrentmessage() {
+        return currentmessage;
     }
     
     public List<Message> getMessageList() {
-        return messageList;
+        return messages;
     }
     
     public Message getById(int id){
-         for (Message m : messageList) {
+         for (Message m : messages) {
             if (m.getId() == id) {
                 return m;
             }
         }
         return null;
     }
-    
-    public List<Message> getFromTo(Date fromDate, Date endDate){
-        return messageList;
+   
+    public JsonObject getByIdJson(int id){
+        
+        for(Message m : messages){
+            if(m.getId() == id){
+             JsonObject json = Json.createObjectBuilder()
+                     .add("id", m.getId())
+                     .add("title", m.getTitle())
+                     .add("contents", m.getContents())
+                     .add("author", m.getContents())
+                     .add("senttime", m.getSenttime().toString())
+                     .build(); 
+             return json;
+            }
+        }
+        return null;
     }
     
-    public List<Message> getAll(){
-        return messageList;
-    }
+  public JsonArray getByDateJson(Date startDate, Date endDate){
+     
+        JsonArrayBuilder json = Json.createArrayBuilder();
+        for (Message m : messages) {
+            if(m.getSenttime().after(startDate) && m.getSenttime().before(endDate)){
+                json.add(getByIdJson(m.getId()));
+            }
+        }
+       return json.build();
+  }
+  
+  public JsonObject addJson(JsonObject json){
+        try {
+            currentmessage = new Message(json.getInt("id"), json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime")));
+           }
+            catch (ParseException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            messages.add(currentmessage);
+            JsonObject json1 = Json.createObjectBuilder()
+                    .add("id",json.getInt("id")  )
+                    .add("title", json.getString("title"))
+                    .add("contents", json.getString("contents"))
+                    .add("author", json.getString("author"))
+                    .add("senttime", json.getString("senttime"))
+                    .build();
+            return json1;
+  }
+  
+  public JsonObject editJson(Integer id, JsonObject json){
+      for(Message m : messages){
+            if(m.getId() == id){
+                try {
+                    m.setTitle(json.getString("title"));
+                    m.setContents(json.getString("contents"));
+                    m.setAuthor(json.getString("author"));
+                    m.setSenttime(df.parse(json.getString("senttime")));  
+                } catch (ParseException ex) {
+                    Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+              getByIdJson(id);
+            }  
+      }
+      return null;
+  }
+  
+  public boolean deleteById(int id){
+        for(Message m : messages){
+            if(m.getId() == id){
+              messages.remove(m);
+              return true;
+            }
+        }
+        return false;
+  }
 }

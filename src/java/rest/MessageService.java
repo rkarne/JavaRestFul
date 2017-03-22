@@ -33,7 +33,7 @@ public class MessageService {
     @Context
     private UriInfo context;
    
-    private MessageController messages;
+    private MessageController messageController;
 
     /**
      * Creates a new instance of GenericResource
@@ -51,8 +51,8 @@ public class MessageService {
         //TODO return proper representation object
         JsonArrayBuilder json = Json.createArrayBuilder();
         
-        for (Message todo : messages.getMessageList()) {
-            json.add(messages.toString());
+        for (Message todo : messageController.getMessageList()) {
+            json.add(messageController.toString());
         }
         return json.build();
     }
