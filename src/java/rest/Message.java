@@ -5,7 +5,14 @@
  */
 package rest;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.JsonObject;
 
 /**
  *
@@ -19,15 +26,42 @@ public class Message {
     private String author;
     private Date senttime;
  
+  public Message()
+    {
     
-    Message(int id, String title, String contents, String author, Date senttime){
+    }
+  DateFormat d = new SimpleDateFormat("mm/dd/yyyy");
+  
+   public  Message(int id, String title, String contents, String author, Date senttime){
         this.id = id;
         this.title = title;
         this.contents = contents;
         this.author = author;
         this.senttime = senttime;
     }
+    public Message(JsonObject json) {
+        id = json.getInt("id");
+        title = json.getString("title");
+        contents = json.getString("contents");
+        author = json.getString("author");
+        String senttime = json.getString("senttime");
+        try {
+            this.senttime = d.parse(senttime);
+        } catch (ParseException ex) {
+            this.senttime = new Date();
+            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
+    public JsonObject toJSON() {
+        return Json.createObjectBuilder()
+                .add("id", id)
+                .add("title", title)
+                .add("contents", contents)
+                .add("author", author)
+                .add("senttime",senttime.toString())
+                .build();
+    }
     public int getId() {
         return id;
     }
