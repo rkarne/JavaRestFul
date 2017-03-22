@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.PathParam;
@@ -36,27 +37,26 @@ public class MessageService {
    
     private MessageController messageController = new MessageController();
 
-    /**
-     * Creates a new instance of GenericResource
-     */
-    public MessageService() {
-    }
-
+ 
+  
     /**
      * Retrieves representation of an instance of rest.GenericResource
      * @return an instance of java.lang.String
      */
     @GET
     @Produces("application/json")
-    public Response getJson() {
-        //TODO return proper representation object
-      JsonArrayBuilder json = Json.createArrayBuilder();
-        for (Message m : messageController.getMessageList()) {
-            json.add(m.toJSON());
-        }
-        return Response.ok(json.build().toString()).build();
+    public JsonArray getJson() {
+        return messageController.getAllJson();
     }
 
+    
+    @GET()
+    @Path("{id}")
+    @Produces("application/json")
+    public JsonObject getJsonById(@PathParam("id") int id){
+     return messageController.getByIdJson(id);
+        
+    }
     /**
      * PUT method for updating or creating an instance of GenericResource
      * @param content representation for the resource
