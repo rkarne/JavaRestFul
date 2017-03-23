@@ -100,11 +100,15 @@ public class MessageService {
      */
     @PUT
     @Consumes("application/json")
-    public void putJson(String content) {
+    @Path("/{id}")
+    public JsonObject putJson(@PathParam("id") int id, JsonObject json) {
+         return messageController.editJson(id, json);
     }
     
     @DELETE
-    public void deleteJson(String conetent){
-        
+    @Path("/{id}")
+    @Produces("text/plain")
+    public boolean deleteJson(int id){
+         return messageController.deleteById(id);
     }
 }
