@@ -108,7 +108,7 @@ public class MessageController {
        return json.build();
   }
   
-  public JsonObject addJson(JsonObject json){
+  public JsonArray addJson(JsonObject json){
            int id = messages.size() + 1;
             String title = json.getString("title");
             String contents  = json.getString("contents");
@@ -134,7 +134,7 @@ public class MessageController {
         }
       
      
-           return getByIdJson(currentmessage.getId());
+           return getAllJson();
            /* JsonObject json1 = Json.createObjectBuilder()
                     .add("id",id  )
                     .add("title", json.getString("title"))

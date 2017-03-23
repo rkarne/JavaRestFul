@@ -74,15 +74,12 @@ public class MessageService {
      return messageController.getByIdJson(id);
         
     }
-    
-    
-    
+ 
     @GET
     @Path("{startdate}/{enddate}")
     @Produces("application/json")
     public JsonArray getJsonByDate(@PathParam("startdate") String startDate, @PathParam("enddate") String endDate ) throws ParseException{
-        DateFormat df = new SimpleDateFormat("yyyy-mm-dd");
-        
+        DateFormat df = new SimpleDateFormat("yyyy-mm-dd");       
        return messageController.getByDateJson(df.parse(startDate), df.parse(endDate));
         
     }
@@ -90,7 +87,7 @@ public class MessageService {
     @POST
     @Consumes("application/json")
     @Produces("application/json")
-    public JsonObject postJson(JsonObject json){
+    public JsonArray postJson(JsonObject json){
        return messageController.addJson(json);
     }
     /**
