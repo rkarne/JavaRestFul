@@ -90,7 +90,7 @@ public class MessageService {
     @POST
     @Consumes("application/json")
     @Produces("application/json")
-    public JsonObject postJson(JsonObject json){
+    public JsonArray postJson(JsonObject json){
        return messageController.addJson(json);
     }
     /**

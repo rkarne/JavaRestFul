@@ -108,33 +108,23 @@ public class MessageController {
        return json.build();
   }
   
-  public JsonObject addJson(JsonObject json){
-           int id = messages.size() + 1;
-            String title = json.getString("title");
-            String contents  = json.getString("contents");
-            String author = json.getString("author");
-            String senttime = "";
+
+
+
+  public JsonArray addJson(JsonObject json){
         try {
-            if (json.containsKey("senttime")){
-                senttime = json.getString("senttime");
-                currentmessage.setId(id);
-                currentmessage.setTitle(title);
-                currentmessage.setContents(contents);
-                currentmessage.setAuthor(author);
-                currentmessage.setSenttime(df.parse(senttime));
+                currentmessage.setId(messages.size() + 1);
+                currentmessage.setTitle(json.getString("title"));
+                currentmessage.setContents(json.getString("contents"));
+                currentmessage.setAuthor(json.getString("author"));
+                currentmessage.setSenttime(df.parse(json.getString("senttime")));
                // messages.add(new Message(id, title, contents, author, df.parse(senttime)));
-               messages.add(currentmessage);
-            }
-            else {
-                messages.add(new Message(id, title, contents, author, df.parse(senttime)));
-             
-            }
+               messages.add(currentmessage);  
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
         }
-      
-     
-           return getByIdJson(currentmessage.getId());
+           return getAllJson();
+
            /* JsonObject json1 = Json.createObjectBuilder()
                     .add("id",id  )
                     .add("title", json.getString("title"))
