@@ -30,9 +30,9 @@ import javax.json.JsonObjectBuilder;
 @ApplicationScoped
 
 public class MessageController {
-    private List<Message> messages;
+    private List<Message> messages = new ArrayList<>();
     Message currentmessage;
-    DateFormat df = new SimpleDateFormat("yyyy-mm-dd");
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
     public MessageController(){
         currentmessage = new Message(1, "", "", "", null);
@@ -41,7 +41,7 @@ public class MessageController {
     
     private void getValues(){
         try {
-            messages = new ArrayList<>();
+           
             messages.add(new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20")));
             messages.add(new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-21")));
             messages.add(new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-22")));
@@ -53,7 +53,7 @@ public class MessageController {
     public JsonArray getAllJson(){
          JsonArrayBuilder json = Json.createArrayBuilder();
          for(Message m : messages){
-             json.add(getByIdJson(m.getId()));
+             json.add(m.toJSON());
          }  
         return json.build();
     }
@@ -109,21 +109,40 @@ public class MessageController {
   }
   
   public JsonObject addJson(JsonObject json){
+           int id = messages.size() + 1;
+            String title = json.getString("title");
+            String contents  = json.getString("contents");
+            String author = json.getString("author");
+            String senttime = "";
         try {
-            currentmessage = new Message(json.getInt("id"), json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime")));
-           }
-            catch (ParseException ex) {
-            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            if (json.containsKey("senttime")){
+                senttime = json.getString("senttime");
+                currentmessage.setId(id);
+                currentmessage.setTitle(title);
+                currentmessage.setContents(contents);
+                currentmessage.setAuthor(author);
+                currentmessage.setSenttime(df.parse(senttime));
+               // messages.add(new Message(id, title, contents, author, df.parse(senttime)));
+               messages.add(currentmessage);
             }
-            messages.add(currentmessage);
-            JsonObject json1 = Json.createObjectBuilder()
-                    .add("id",json.getInt("id")  )
+            else {
+                messages.add(new Message(id, title, contents, author, df.parse(senttime)));
+             
+            }
+        } catch (ParseException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      
+     
+           return getByIdJson(currentmessage.getId());
+           /* JsonObject json1 = Json.createObjectBuilder()
+                    .add("id",id  )
                     .add("title", json.getString("title"))
                     .add("contents", json.getString("contents"))
                     .add("author", json.getString("author"))
                     .add("senttime", json.getString("senttime"))
                     .build();
-            return json1;
+            return json1;  */
   }
   
   public JsonObject editJson(Integer id, JsonObject json){
