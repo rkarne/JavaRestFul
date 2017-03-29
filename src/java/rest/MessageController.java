@@ -113,13 +113,8 @@ public class MessageController {
 
   public JsonArray addJson(JsonObject json){
         try {
-                currentmessage.setId(messages.size() + 1);
-                currentmessage.setTitle(json.getString("title"));
-                currentmessage.setContents(json.getString("contents"));
-                currentmessage.setAuthor(json.getString("author"));
-                currentmessage.setSenttime(df.parse(json.getString("senttime")));
-               // messages.add(new Message(id, title, contents, author, df.parse(senttime)));
-               messages.add(currentmessage);  
+                messages.add(new Message(messages.size() + 1, json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime"))));
+              
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
         }
