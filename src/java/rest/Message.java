@@ -26,12 +26,23 @@ public class Message {
     private String author;
     private Date senttime;
  
+    /**
+     * Empty Constructor
+     */
   public Message()
     {
     
     }
   DateFormat d = new SimpleDateFormat("yyyy-MM-dd");
   
+  /**
+   * Para
+   * @param id
+   * @param title
+   * @param contents
+   * @param author
+   * @param senttime 
+   */
    public  Message(int id, String title, String contents, String author, Date senttime){
         this.id = id;
         this.title = title;
@@ -39,21 +50,30 @@ public class Message {
         this.author = author;
         this.senttime = senttime;
     }
+   
+   /**
+    * Class constructor with parameter as JSON
+    * @param json 
+    */
     public Message(JsonObject json) {
         id = json.getInt("id");
         title = json.getString("title");
         contents = json.getString("contents");
         author = json.getString("author");
-        String senttime = json.getString("senttime");
         try {
-            this.senttime = d.parse(senttime);
+            senttime = d.parse(json.getString("senttime"));
         } catch (ParseException ex) {
-            this.senttime = new Date();
             Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            Date dt =  new Date();
+            senttime = dt;
         }
     }
 
-    public JsonObject toJSON() {
+    /**
+     * Class instance variables into json object
+     * @return JSON object 
+     */
+    public JsonObject convertToJson() {
         return Json.createObjectBuilder()
                 .add("id", id)
                 .add("title", title)
@@ -62,6 +82,11 @@ public class Message {
                 .add("senttime",senttime.toString())
                 .build();
     }
+    
+    /**
+     * Setters and getters
+     * @return 
+     */
     public int getId() {
         return id;
     }

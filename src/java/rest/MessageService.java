@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import javax.faces.bean.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -43,16 +44,19 @@ public class MessageService {
    
     private MessageController messageController = new MessageController();
 
- 
-  
     /**
      * Retrieves representation of an instance of rest.GenericResource
      * @return an instance of java.lang.String
      */
     @GET
     @Produces("application/json")
-    public JsonArray getJson() {
-        return messageController.getAllJson();
+    public Response getAllJson() {
+         //JsonArrayBuilder json = Json.createArrayBuilder();
+        // json = messageController.getAllJson();
+       // for (Message m : messageController.getMessageList()) {
+           // json.add(m.convertToJson());
+        //}
+        return Response.ok(messageController.getAllJson()).build();
     }
   /*  public Response getJson(){
          JsonArrayBuilder json = Json.createArrayBuilder();
@@ -61,37 +65,47 @@ public class MessageService {
         }
         return Response.ok(json.build().toString()).build();
     } */
-   /**
+  
+    
+    /**
      * GET method for updating or creating an instance of GenericResource
+     * @param id
      * @param content representation for the resource
      * @return an HTTP response with content of the updated or created resource.
      */
-    
     @GET
     @Path("{id}")
     @Produces("application/json")
     public JsonObject getJsonById(@PathParam("id") int id){
-     return messageController.getByIdJson(id);
-        
+     return messageController.getMessageById(id).convertToJson();
     }
-    
-    
     
     @GET
     @Path("{startdate}/{enddate}")
     @Produces("application/json")
-    public JsonArray getJsonByDate(@PathParam("startdate") String startDate, @PathParam("enddate") String endDate ) throws ParseException{
-        DateFormat df = new SimpleDateFormat("yyyy-mm-dd");
-        
-       return messageController.getByDateJson(df.parse(startDate), df.parse(endDate));
-        
+    public Response getJsonByDate(@PathParam("startdate") String startDate, @PathParam("enddate") String endDate ) {
+         List<Message> rangeMessages = messageController.getMessageByDateJson(startDate, endDate);
+        JsonArrayBuilder json = Json.createArrayBuilder();
+        for (Message m : rangeMessages) {
+            json.add(m.convertToJson());
+        }
+        return Response.ok(json.build().toString()).build(); 
     }
-    
+    /**
+     * post a json add that to list and return list
+     * @param json
+     * @return Response as JSON
+     */
     @POST
     @Consumes("application/json")
     @Produces("application/json")
-    public JsonArray postJson(JsonObject json){
-       return messageController.addJson(json);
+    public Response postJson(JsonObject json){
+       List<Message> message = messageController.addJson(json);
+       //JsonArrayBuilder js = Json.createArrayBuilder();
+       //for (Message m : message) {
+         //  js.add(m.convertToJson());
+        //}
+        return getAllJson();
     }
     /**
      * PUT method for updating or creating an instance of GenericResource
@@ -102,13 +116,13 @@ public class MessageService {
     @Consumes("application/json")
     @Path("/{id}")
     public JsonObject putJson(@PathParam("id") int id, JsonObject json) {
-         return messageController.editJson(id, json);
+         return messageController.editJson(id, json).convertToJson();
     }
     
     @DELETE
     @Path("/{id}")
     @Produces("text/plain")
-    public boolean deleteJson(int id){
+    public String deleteJson(@PathParam("id") int id){
          return messageController.deleteById(id);
     }
 }

@@ -5,7 +5,6 @@
  */
 package rest;
 
-import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,19 +25,25 @@ import javax.json.JsonObjectBuilder;
  *
  * @author rkarne
  */
-@Named
+
 @ApplicationScoped
 
 public class MessageController {
     private List<Message> messages = new ArrayList<>();
-    Message currentmessage;
+    //Message currentmessage;
     DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
+    /**
+     * Empty class constructor 
+     */
     public MessageController(){
-        currentmessage = new Message(1, "", "", "", null);
+        //currentmessage = new Message(1, "", "", "", null);
         getValues();
     }
     
+    /**
+     * create a method that add value to list
+     */
     private void getValues(){
         try {
            
@@ -50,36 +55,45 @@ public class MessageController {
             
         }
     }
+   
+    /**
+     * method creates a JSON array and return JSON 
+     * @return JSON array
+     */
     public JsonArray getAllJson(){
          JsonArrayBuilder json = Json.createArrayBuilder();
-         for(Message m : messages){
-             json.add(m.toJSON());
+         for(Message msg : messages){
+             json.add(msg.convertToJson());
          }  
         return json.build();
     }
 
-    public void setCurrentmessage(Message currentmessage) {
-        this.currentmessage = currentmessage;
-    }
-
-    public Message getCurrentmessage() {
-        return currentmessage;
-    }
+   
     
     public List<Message> getMessageList() {
         
         return messages;
     }
     
-    public Message getById(int id){
-         for (Message m : messages) {
-            if (m.getId() == id) {
-                return m;
+    /**
+     * method with input as message id 
+     * @param id
+     * @return message object
+     */
+    public Message getMessageById(int id){
+         for (Message msg: messages) {
+            if (msg.getId() == id) {
+                return msg;
             }
         }
         return null;
     }
    
+    /**
+     * Get JSON Object by id
+     * @param id
+     * @return 
+     */
     public JsonObject getByIdJson(int id){
         
         for(Message m : messages){
@@ -97,28 +111,48 @@ public class MessageController {
         return null;
     }
     
-  public JsonArray getByDateJson(Date startDate, Date endDate){
-     
-        JsonArrayBuilder json = Json.createArrayBuilder();
-        for (Message m : messages) {
-            if(m.getSenttime().after(startDate) && m.getSenttime().before(endDate)){
-                json.add(getByIdJson(m.getId()));
+    /**
+     * Accepts the date as string and returns list
+     * @param startDate
+     * @param endDate
+     * @return list
+     */
+  public List<Message> getMessageByDateJson(String startDate, String  endDate){
+        List<Message> messagesByDate = new ArrayList<>();
+         for (Message m : messages){
+            try {
+                
+                if (m.getSenttime().after(df.parse(startDate)) 
+                        && m.getSenttime().before(df.parse(endDate))
+                        || m.getSenttime().equals(df.parse(startDate))
+                        || m.getSenttime().equals(df.parse(endDate))){
+                    messagesByDate.add(m);
+                }
+            } catch (ParseException ex) {
+                Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-       return json.build();
+        return messagesByDate;    
   }
-  
-
-
-
-  public JsonArray addJson(JsonObject json){
+ 
+  /**
+   * Adds the message object to list and returns list
+   * @param json
+   * @return list
+   */
+  public List<Message> addJson(JsonObject json){
         try {
-                messages.add(new Message(messages.size() + 1, json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime"))));
-              
+              int id = messages.size() + 1;
+              String title = json.getString("title");
+              String content = json.getString("contents");
+              String author = json.getString("author");
+              Date sent = df.parse(json.getString("senttime"));
+            //messages.add(new Message(messages.size() + 1, json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime"))));
+              messages.add(new Message(id, title, content, author, sent));
         } catch (ParseException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
         }
-           return getAllJson();
+           return messages;
 
            /* JsonObject json1 = Json.createObjectBuilder()
                     .add("id",id  )
@@ -129,8 +163,13 @@ public class MessageController {
                     .build();
             return json1;  */
   }
-  
-  public JsonObject editJson(Integer id, JsonObject json){
+  /**
+   * accepts the id of message and returns the message object
+   * @param id
+   * @param json
+   * @return 
+   */
+  public Message editJson(Integer id, JsonObject json){
       for(Message m : messages){
             if(m.getId() == id){
                 try {
@@ -140,20 +179,25 @@ public class MessageController {
                     m.setSenttime(df.parse(json.getString("senttime")));  
                 } catch (ParseException ex) {
                     Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-              getByIdJson(id);
-            }  
+                } 
+                return m;
+            } 
       }
       return null;
   }
   
-  public boolean deleteById(int id){
+  /**
+   * delete Message by id from list
+   * @param id
+   * @return String "200 OK" if deleted else return failed
+   */
+  public String deleteById(int id){
         for(Message m : messages){
             if(m.getId() == id){
               messages.remove(m);
-              return true;
+              return "200 OK";
             }
         }
-        return false;
+        return "Failed to delete Message";
   }
 }
