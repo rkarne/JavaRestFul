@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 /**
  * A Database Utility Class
  *
- * @author <ETNER YOUR NAME HERE>
+ * @author Roja Jayashree Karne
  */
 public class DBUtils {
 

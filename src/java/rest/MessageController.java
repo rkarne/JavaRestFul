@@ -1,11 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package rest;
 
-import java.text.DateFormat;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,191 +9,214 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.inject.Named;
+import javax.enterprise.context.ApplicationScoped;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import java.sql.*;
 
 /**
  *
- * @author rkarne
+ * @author Roja Jayashree Karne
  */
-
 @ApplicationScoped
-
 public class MessageController {
-    private List<Message> messages = new ArrayList<>();
-    //Message currentmessage;
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private List<Message> messages;
 
     /**
-     * Empty class constructor 
+     * empty constructor
      */
-    public MessageController(){
-        //currentmessage = new Message(1, "", "", "", null);
-        getValues();
+    public MessageController() {
+        getFromDB();
+    }
+/**
+ * fetch message list from Database
+ */
+    public void getFromDB() {
+        try {
+            if (messages == null) {
+                messages = new ArrayList<>();
+            }
+            messages.clear();
+            Connection conn = DBUtils.getConnection();
+            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM message");
+            while (rs.next()) {
+                Message m = new Message();
+                m.setId(rs.getInt("id"));
+                m.setTitle(rs.getString("title"));
+                m.setContents(rs.getString("contents"));
+                m.setAuthor(rs.getString("author"));
+                m.setSenttime(rs.getDate("senttime"));
+                messages.add(m);
+            }
+            conn.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * insert and update the Database 
+     * @param m 
+     */
+    public void InsertDB(Message m) {
+        try {
+            String sql = "";
+            Connection conn = DBUtils.getConnection();
+            if (m.getId() <= 0) {
+                sql = "INSERT INTO message (title, contents, author, senttime) VALUES (?, ?, ?, ?)";
+            } else {
+                sql = "UPDATE message SET title = ?, contents = ?, author = ?, senttime = ? WHERE id = ?";
+            }
+            PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, m.getTitle());
+            pstmt.setString(2, m.getContents());
+            pstmt.setString(3, m.getAuthor());
+            pstmt.setDate(4, new java.sql.Date(m.getSenttime().getTime()));
+            if (m.getId() > 0) {
+                pstmt.setInt(5, m.getId());
+            }
+            pstmt.executeUpdate();
+            if (m.getId() <= 0) {
+                ResultSet rs = pstmt.getGeneratedKeys();
+                rs.next();
+                int id = rs.getInt(1);
+                m.setId(id);
+            }
+            conn.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     /**
-     * create a method that add value to list
+     * Delete Message from database
+     * @param m 
      */
-    private void getValues(){
+    
+    public void deleteMessage(Message m) {
         try {
-           
-            messages.add(new Message(1, "sample1", "This is sample1", "sampleAuthor1", df.parse("2017-03-20")));
-            messages.add(new Message(2, "sample2", "This is sample2", "sampleAuthor2", df.parse("2017-03-21")));
-            messages.add(new Message(3, "sample3", "This is sample3", "sampleAuthor3", df.parse("2017-03-22")));
-        } catch (ParseException ex) {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement("DELETE FROM message WHERE id = ?");
+            pstmt.setInt(1, m.getId());
+            pstmt.executeUpdate();
+            conn.close();
+        } catch (SQLException ex) {
             Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-            
         }
     }
-   
+
     /**
-     * method creates a JSON array and return JSON 
-     * @return JSON array
+     * convert all messages from list into json object and then add into json array
+     * @return JsonArray
      */
-    public JsonArray getAllJson(){
-         JsonArrayBuilder json = Json.createArrayBuilder();
-         for(Message msg : messages){
-             json.add(msg.convertToJson());
-         }  
+    public JsonArray getAllJson() {
+        JsonArrayBuilder json = Json.createArrayBuilder();
+        for (Message m : messages) {
+            json.add(m.toJson());
+        }
         return json.build();
     }
 
-   
-    
-    public List<Message> getMessageList() {
-        
-        return messages;
-    }
-    
     /**
-     * method with input as message id 
+     * fetch from message for a one message object to work around get, put and delete
      * @param id
-     * @return message object
+     * @return Message object from list
      */
-    public Message getMessageById(int id){
-         for (Message msg: messages) {
-            if (msg.getId() == id) {
-                return msg;
-            }
-        }
-        return null;
-    }
-   
-    /**
-     * Get JSON Object by id
-     * @param id
-     * @return 
-     */
-    public JsonObject getByIdJson(int id){
-        
-        for(Message m : messages){
-            if(m.getId() == id){
-             JsonObject json = Json.createObjectBuilder()
-                     .add("id", m.getId())
-                     .add("title", m.getTitle())
-                     .add("contents", m.getContents())
-                     .add("author", m.getAuthor())
-                     .add("senttime", m.getSenttime().toString())
-                     .build(); 
-             return json;
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Accepts the date as string and returns list
-     * @param startDate
-     * @param endDate
-     * @return list
-     */
-  public List<Message> getMessageByDateJson(String startDate, String  endDate){
-        List<Message> messagesByDate = new ArrayList<>();
-         for (Message m : messages){
-            try {
-                
-                if (m.getSenttime().after(df.parse(startDate)) 
-                        && m.getSenttime().before(df.parse(endDate))
-                        || m.getSenttime().equals(df.parse(startDate))
-                        || m.getSenttime().equals(df.parse(endDate))){
-                    messagesByDate.add(m);
-                }
-            } catch (ParseException ex) {
-                Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return messagesByDate;    
-  }
- 
-  /**
-   * Adds the message object to list and returns list
-   * @param json
-   * @return list
-   */
-  public List<Message> addJson(JsonObject json){
-        try {
-              int id = messages.size() + 1;
-              String title = json.getString("title");
-              String content = json.getString("contents");
-              String author = json.getString("author");
-              Date sent = df.parse(json.getString("senttime"));
-            //messages.add(new Message(messages.size() + 1, json.getString("title"), json.getString("contents"), json.getString("author"), df.parse(json.getString("senttime"))));
-              messages.add(new Message(id, title, content, author, sent));
-        } catch (ParseException ex) {
-            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-           return messages;
-
-           /* JsonObject json1 = Json.createObjectBuilder()
-                    .add("id",id  )
-                    .add("title", json.getString("title"))
-                    .add("contents", json.getString("contents"))
-                    .add("author", json.getString("author"))
-                    .add("senttime", json.getString("senttime"))
-                    .build();
-            return json1;  */
-  }
-  /**
-   * accepts the id of message and returns the message object
-   * @param id
-   * @param json
-   * @return 
-   */
-  public Message editJson(Integer id, JsonObject json){
-      for(Message m : messages){
-            if(m.getId() == id){
-                try {
-                    m.setTitle(json.getString("title"));
-                    m.setContents(json.getString("contents"));
-                    m.setAuthor(json.getString("author"));
-                    m.setSenttime(df.parse(json.getString("senttime")));  
-                } catch (ParseException ex) {
-                    Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-                } 
+    public Message getById(int id) {
+        for (Message m : messages) {
+            if (m.getId() == id) {
                 return m;
-            } 
-      }
-      return null;
-  }
-  
-  /**
-   * delete Message by id from list
-   * @param id
-   * @return String "200 OK" if deleted else return failed
-   */
-  public String deleteById(int id){
-        for(Message m : messages){
-            if(m.getId() == id){
-              messages.remove(m);
-              return "200 OK";
             }
         }
-        return "Failed to delete Message";
-  }
+        return null;
+    }
+
+    /**
+     * return the json object after fetching from list as a object
+     * @param id
+     * @return JsonObject
+     */
+    public JsonObject getByIdJson(int id) {
+        Message m = getById(id);
+        if (m != null) {
+            return getById(id).toJson();
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * accepts the start and end date to get the list in between convert that to jsonobject and then add to json array 
+     * @param from
+     * @param to
+     * @return JsonArray
+     */
+
+    public JsonArray getByDateJson(Date from, Date to) {
+        JsonArrayBuilder json = Json.createArrayBuilder();
+        for (Message m : messages) {
+            if ((m.getSenttime().after(from) && m.getSenttime().before(to))
+                    || m.getSenttime().equals(from) || m.getSenttime().equals(to)) {
+                json.add(m.toJson());
+            }
+        }
+        return json.build();
+    }
+    
+    /**
+     * add json to the list and insert that into database by taking the values from the json posted
+     * @param json
+     * @return JsonArray
+     */
+
+    public JsonArray addJson(JsonObject json) {
+        Message m = new Message(json);
+        InsertDB(m);
+        getFromDB();
+        return getAllJson();
+    }
+    
+    /**
+     * edit the json posted after fetching from the list and update that into list as well as into database
+     * @param id
+     * @param json
+     * @return JsonObject
+     */
+
+    public JsonArray editJson(int id, JsonObject json) {
+        Message m = getById(id);
+        m.setTitle(json.getString("title", ""));
+        m.setContents(json.getString("contents", ""));
+        m.setAuthor(json.getString("author", ""));
+        String timeStr = json.getString("senttime", "");
+        try {
+            m.setSenttime(sdf.parse(timeStr));
+        } catch (ParseException ex) {
+            
+            m.setSenttime(new Date());
+            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, "Failed Parsing Date: " + timeStr);
+        }
+        InsertDB(m);
+        return getAllJson();
+    }
+/**
+ * accepts the id of the list object of the message to delete and fetch from the database delete and remove from the list too
+ * @param id
+ * @return boolean
+ */
+    
+    public boolean deleteById(int id) {
+        Message m = getById(id);
+        if (m != null) {
+            deleteMessage(m);
+            getFromDB();
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
